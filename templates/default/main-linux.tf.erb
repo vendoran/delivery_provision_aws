@@ -1,0 +1,44 @@
+// EC2 Instance Resource for Module
+resource "aws_instance" "chef-workflow-environment-node-<%= @instance %>" {
+  ami                    = "<%= @ec2_ami_id %>"
+  instance_type          = "<%= @ec2_instance_type %>"
+  key_name               = "${var.ec2_keypair_name}"
+  vpc_security_group_ids = "${var.vpc_security_groups}"
+  subnet_id              = "${var.vpc_subnet}"
+
+  tags {
+    Name       = "${var.aws_resource_prefix}-${var.chef_cookbook}-${var.chef_environment}-<%= @instance %>"
+    Created_by = "${lookup(var.ec2_tags,"created_by")}"
+  }
+
+  connection {
+    type        = "<%= @ec2_connection_type %>"
+    user        = "<%= @ec2_login_user %>"
+    private_key = "${file("aws_ssh_key.pem")}"
+    timeout     = "3600s"
+  }
+
+  // EC2 Chef provisioner - creates node
+  provisioner "chef" {
+    environment             = "${var.chef_environment}"
+    run_list                = ["automate-base::default"]
+    node_name               = "${var.chef_cookbook}-${var.chef_environment}-<%= @instance %>"
+    server_url              = "${var.chef_server_url}"
+    fetch_chef_certificates = true
+    recreate_client         = true
+    user_name               = "${var.chef_user_name}"
+    user_key                = "${file("chef_user_key.pem")}"
+  }
+
+  // EC2 Refresh Chef data vault with new node
+  provisioner "local-exec" {
+    command = "./refresh_data_vaults.sh"
+  }
+
+  // EC2 Run Chef Cookbook Recipe
+  provisioner "remote-exec" {
+    inline = [
+      "sudo chef-client -r 'recipe[${var.chef_cookbook}::<%= @chef_recipe %>]'",
+    ]
+  }
+}

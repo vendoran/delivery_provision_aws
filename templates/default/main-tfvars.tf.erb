@@ -1,0 +1,49 @@
+data "template_file" "init" {
+  template = "${file("user_data.ps1")}"
+
+  vars {
+    ec2_login_user_pw = "${var.ec2_login_user_pw}"
+  }
+}
+
+resource "aws_instance" "chef-workflow-environment-node-<%= @instance %>" {
+  ami                    = "<%= @ec2_ami_id %>"
+  instance_type          = "<%= @ec2_instance_type %>"
+  key_name               = "${var.ec2_keypair_name}"
+  vpc_security_group_ids = "${var.vpc_security_groups}"
+  subnet_id              = "${var.vpc_subnet}"
+  user_data              = "${data.template_file.init.rendered}"
+
+  tags {
+    Name       = "${var.aws_resource_prefix}-${var.chef_cookbook}-${var.chef_environment}-<%= @instance %>"
+    Created_by = "${lookup(var.ec2_tags,"created_by")}"
+  }
+
+  connection {
+    type     = "<%= @ec2_connection_type %>"
+    user     = "<%= @ec2_login_user %>"
+    password = "${var.ec2_login_user_pw}"
+    timeout  = "3600s"
+  }
+
+  provisioner "chef" {
+    environment             = "${var.chef_environment}"
+    run_list                = ["automate-base::default"]
+    node_name               = "${var.chef_cookbook}-${var.chef_environment}-<%= @instance %>"
+    server_url              = "${var.chef_server_url}"
+    fetch_chef_certificates = true
+    recreate_client         = true
+    user_name               = "${var.chef_user_name}"
+    user_key                = "${file("chef_user_key.pem")}"
+  }
+
+  provisioner "local-exec" {
+    command = "./refresh_data_vaults.sh"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "chef-client -r 'recipe[${var.chef_cookbook}::<%= @chef_recipe %>]'",
+    ]
+  }
+}

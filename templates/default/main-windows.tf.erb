@@ -1,0 +1,37 @@
+/*
+// node variables
+ec2_ami_id = "<%= node['delivery_provision_aws']['ec2_ami_id'] %>"
+
+ec2_instance_type = "<%= node['delivery_provision_aws']['ec2_instance_type'] %>"
+
+ec2_connection_type = "<%= node['delivery_provision_aws']['ec2_connection_type'] %>"
+
+ec2_login_user = "<%= node['delivery_provision_aws']['ec2_login_user'] %>"
+
+chef_recipe = "<%= @chef_recipe %>"
+*/
+
+// run variables
+aws_region = "<%= node['delivery_provision_aws']['aws_region'] %>"
+
+aws_resource_prefix = "<%= node['delivery_provision_aws']['aws_resource_prefix'] %>"
+
+ec2_keypair_name = "<%= node['delivery_provision_aws']['ec2_keypair_name'] %>"
+
+vpc_subnet = "<%= node['delivery_provision_aws']['vpc_subnet'] %>"
+
+vpc_security_groups = <%= node['delivery_provision_aws']['vpc_security_groups'] %>
+
+ec2_tags = {
+  created_by = "terraform"
+}
+
+chef_server_url = "<%= node['delivery_provision_aws']['automate_chef_server_url'] %>"
+
+chef_user_name = "<%= node['delivery_provision_aws']['automate_chef_user_name'] %>"
+
+ec2_login_user_pw = "<%= @ec2_login_user_pw %>"
+
+chef_environment = "<%= @chef_environment %>"
+
+chef_cookbook = "<%= @chef_cookbook %>"
