@@ -1,4 +1,4 @@
 # Terraform install package
-default['delivery_provision_aws']['install']           = true
-default['delivery_provision_aws']['install_url']       = 'https://releases.hashicorp.com/terraform/0.8.5/terraform_0.8.5_linux_amd64.zip'
-default['delivery_provision_aws']['package_checksum']  = '4b4324e354c26257f0b830eacb0e7cc7e2ced017d78855f74cb9377f1abf1dd7'
+default['geip_delivery_provision']['install'] = true
+default['geip_delivery_provision']['install_url']       = 'https://releases.hashicorp.com/terraform/0.9.5/terraform_0.9.5_linux_amd64.zip'
+default['geip_delivery_provision']['package_checksum']  = '0cbb5474c76d878fbc99e7705ce6117f4ea0838175c13b2663286a207e38d783'
