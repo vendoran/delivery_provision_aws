@@ -6,9 +6,13 @@ resource "aws_instance" "chef-workflow-environment-node-<%= @instance %>" {
   vpc_security_group_ids = "${var.vpc_security_groups}"
   subnet_id              = "${var.vpc_subnet}"
 
+  <%= @ebs_data_store %>
+  
   tags {
-    Name       = "${var.aws_resource_prefix}-${var.chef_cookbook}-${var.chef_environment}-<%= @instance %>"
-    Created_by = "${lookup(var.ec2_tags,"created_by")}"
+    Name        = "${var.aws_resource_prefix}-<%= @ec2_instance_name %>-${var.chef_environment}-<%= @instance %>"
+    UAI         = "${lookup(var.ec2_tags,"UAI")}"
+    Created_by  = "${lookup(var.ec2_tags,"created_by")}"
+    Chef_Recipe = "<%= @chef_recipe %>"
   }
 
   connection {
@@ -21,13 +25,14 @@ resource "aws_instance" "chef-workflow-environment-node-<%= @instance %>" {
   // EC2 Chef provisioner - creates node
   provisioner "chef" {
     environment             = "${var.chef_environment}"
-    run_list                = ["automate-base::default"]
-    node_name               = "${var.chef_cookbook}-${var.chef_environment}-<%= @instance %>"
+    run_list                = ["delivery_provision_aws::attributes"]
+    node_name               = "<%= @ec2_instance_name %>-${var.chef_environment}-<%= @instance %>"
     server_url              = "${var.chef_server_url}"
     fetch_chef_certificates = true
     recreate_client         = true
     user_name               = "${var.chef_user_name}"
     user_key                = "${file("chef_user_key.pem")}"
+    version                 = "${var.chef_client_version}"
   }
 
   // EC2 Refresh Chef data vault with new node

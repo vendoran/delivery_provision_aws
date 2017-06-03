@@ -1,37 +1,54 @@
-/*
-// node variables
-ec2_ami_id = "<%= node['delivery_provision_aws']['ec2_ami_id'] %>"
+data "template_file" "init" {
+  template = "${file("user_data.ps1")}"
 
-ec2_instance_type = "<%= node['delivery_provision_aws']['ec2_instance_type'] %>"
-
-ec2_connection_type = "<%= node['delivery_provision_aws']['ec2_connection_type'] %>"
-
-ec2_login_user = "<%= node['delivery_provision_aws']['ec2_login_user'] %>"
-
-chef_recipe = "<%= @chef_recipe %>"
-*/
-
-// run variables
-aws_region = "<%= node['delivery_provision_aws']['aws_region'] %>"
-
-aws_resource_prefix = "<%= node['delivery_provision_aws']['aws_resource_prefix'] %>"
-
-ec2_keypair_name = "<%= node['delivery_provision_aws']['ec2_keypair_name'] %>"
-
-vpc_subnet = "<%= node['delivery_provision_aws']['vpc_subnet'] %>"
-
-vpc_security_groups = <%= node['delivery_provision_aws']['vpc_security_groups'] %>
-
-ec2_tags = {
-  created_by = "terraform"
+  vars {
+    ec2_login_user_pw = "${var.ec2_login_user_pw}"
+  }
 }
 
-chef_server_url = "<%= node['delivery_provision_aws']['automate_chef_server_url'] %>"
+resource "aws_instance" "chef-workflow-environment-node-<%= @instance %>" {
+  ami                    = "<%= @ec2_ami_id %>"
+  instance_type          = "<%= @ec2_instance_type %>"
+  key_name               = "${var.ec2_keypair_name}"
+  vpc_security_group_ids = "${var.vpc_security_groups}"
+  subnet_id              = "${var.vpc_subnet}"
+  user_data              = "${data.template_file.init.rendered}"
 
-chef_user_name = "<%= node['delivery_provision_aws']['automate_chef_user_name'] %>"
+ <%= @ebs_data_store %>
 
-ec2_login_user_pw = "<%= @ec2_login_user_pw %>"
+  tags {
+    Name        = "${var.aws_resource_prefix}-<%= @ec2_instance_name %>-${var.chef_environment}-<%= @instance %>"
+    UAI         = "${lookup(var.ec2_tags,"UAI")}"
+    Created_by  = "${lookup(var.ec2_tags,"created_by")}"
+    Chef_Recipe = "<%= @chef_recipe %>"
+  }
 
-chef_environment = "<%= @chef_environment %>"
+  connection {
+    type     = "<%= @ec2_connection_type %>"
+    user     = "<%= @ec2_login_user %>"
+    password = "${var.ec2_login_user_pw}"
+    timeout  = "3600s"
+  }
 
-chef_cookbook = "<%= @chef_cookbook %>"
+  provisioner "chef" {
+    environment             = "${var.chef_environment}"
+    run_list                = ["delivery_provision_aws::attributes"]
+    node_name               = "<%= @ec2_instance_name %>-${var.chef_environment}-<%= @instance %>"
+    server_url              = "${var.chef_server_url}"
+    fetch_chef_certificates = true
+    recreate_client         = true
+    user_name               = "${var.chef_user_name}"
+    user_key                = "${file("chef_user_key.pem")}"
+    version                 = "${var.chef_client_version}"
+  }
+
+  provisioner "local-exec" {
+    command = "./refresh_data_vaults.sh"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "chef-client -r 'recipe[${var.chef_cookbook}::<%= @chef_recipe %>]'",
+    ]
+  }
+}

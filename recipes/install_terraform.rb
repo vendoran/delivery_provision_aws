@@ -3,6 +3,10 @@
 # Recipe:: install_terraform
 #
 # Copyright:: 2017, The Authors, All Rights Reserved.
+
+# Location where the Terraform binary will be installed to
+# We install this in the Workflow workspace as the Chef Client
+# run does not run as root
 terraform_install_dir = workflow_workspace
 
 package 'unzip' do

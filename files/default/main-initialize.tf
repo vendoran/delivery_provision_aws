@@ -26,7 +26,7 @@ variable "chef_recipe" {
 }
 */
 
-// execution variables
+// run variables
 variable "aws_region" {
   type        = "string"
   description = "AWS region to deploy in. Ex: us-west-1"
@@ -75,6 +75,11 @@ variable "ec2_login_user_pw" {
 variable "chef_environment" {
   type        = "string"
   description = "Chef Server Environment name"
+}
+
+variable "chef_client_version" {
+  type        = "string"
+  description = "Chef Client Version"
 }
 
 variable "chef_cookbook" {

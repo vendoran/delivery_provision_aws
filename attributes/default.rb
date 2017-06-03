@@ -17,3 +17,4 @@ default['delivery_provision_aws']['automate_chef_user_name']   = nil # 'username
 # default['delivery_provision_aws']['provision']['0'] = { 'platform' => 'ubuntu-14.04', 'size' => 't2.micro', 'recipe' => 'default' }
 # default['delivery_provision_aws']['provision']['1'] = { 'platform' => 'ubuntu-14.04', 'size' => 't2.micro', 'recipe' => 'default' }
 default['delivery_provision_aws']['provision']['0'] = nil
+default['delivery_provision_aws']['storage'] = 'no'
